@@ -3,7 +3,7 @@ import { generateFreepikImage } from "@/lib/freepik";
 
 export async function POST(request: Request) {
   try {
-    const { image, prompt } = await request.json();
+    const { image, prompt, imagination = 50 } = await request.json();
 
     if (!image) {
       return NextResponse.json({ error: "No image provided" }, { status: 400 });
@@ -18,11 +18,13 @@ export async function POST(request: Request) {
     const animePrompt = `${basePrompt}, anime style, highly detailed anime illustration, vibrant colors, clean lines, cel shading, manga art style`;
 
     console.log("Generating with prompt:", animePrompt);
+    console.log("Imagination level:", imagination);
 
     // Use Freepik API for sketch-to-image generation
     const generatedImageUrl = await generateFreepikImage({
       prompt: animePrompt,
       sketchImage: image,
+      imagination,
     });
 
     return NextResponse.json({ image: generatedImageUrl });

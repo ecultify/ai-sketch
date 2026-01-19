@@ -8,13 +8,13 @@ export default function Home() {
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleGenerate = async (imageData: string, prompt: string) => {
+  const handleGenerate = async (imageData: string, prompt: string, imagination: number) => {
     setIsLoading(true);
     try {
       const response = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ image: imageData, prompt }),
+        body: JSON.stringify({ image: imageData, prompt, imagination }),
       });
       const data = await response.json();
       if (data.error) {

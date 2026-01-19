@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Eraser, Pencil, Trash2 } from "lucide-react";
 
 interface DrawingCanvasProps {
-  onGenerate: (imageData: string, prompt: string) => void;
+  onGenerate: (imageData: string, prompt: string, imagination: number) => void;
   onClear?: () => void;
   isGenerating: boolean;
   autoGenerate?: boolean;
@@ -18,7 +18,9 @@ export function DrawingCanvas({ onGenerate, onClear, isGenerating, autoGenerate 
   const [color, setColor] = useState("#000000");
   const [lineWidth, setLineWidth] = useState(3);
   const [prompt, setPrompt] = useState("");
+  const [imagination, setImagination] = useState(50); // 0-100, controls structure weight
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const hasGeneratedRef = useRef(false); // Track if we've generated for current drawing
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -49,6 +51,7 @@ export function DrawingCanvas({ onGenerate, onClear, isGenerating, autoGenerate 
 
   const startDrawing = (e: React.MouseEvent | React.TouchEvent) => {
     setIsDrawing(true);
+    hasGeneratedRef.current = false; // Reset generation flag when starting new drawing
     draw(e);
   };
 
@@ -58,15 +61,21 @@ export function DrawingCanvas({ onGenerate, onClear, isGenerating, autoGenerate 
       clearTimeout(debounceTimerRef.current);
     }
 
-    // Set new timer for auto-generation (1 second after stopping drawing for faster response like Pikaso)
+    // Only generate if we haven't already generated for this drawing session
+    if (hasGeneratedRef.current) {
+      return;
+    }
+
+    // Set new timer for auto-generation (1 second after stopping drawing)
     debounceTimerRef.current = setTimeout(() => {
       const canvas = canvasRef.current;
-      if (canvas && prompt.trim() && !isGenerating) {
+      if (canvas && prompt.trim() && !isGenerating && !hasGeneratedRef.current) {
+        hasGeneratedRef.current = true; // Mark as generated
         const imageData = canvas.toDataURL("image/png");
-        onGenerate(imageData, prompt);
+        onGenerate(imageData, prompt, imagination);
       }
-    }, 1000); // Reduced from 2000ms to 1000ms for faster response
-  }, [prompt, isGenerating, onGenerate]);
+    }, 1000);
+  }, [prompt, isGenerating, imagination, onGenerate]);
 
   const stopDrawing = useCallback(() => {
     setIsDrawing(false);
@@ -117,6 +126,12 @@ export function DrawingCanvas({ onGenerate, onClear, isGenerating, autoGenerate 
       clearTimeout(debounceTimerRef.current);
     }
     
+    // Reset generation flag
+    hasGeneratedRef.current = false;
+    
+    // Clear the prompt
+    setPrompt("");
+    
     // Notify parent to clear the generated image
     if (onClear) {
       onClear();
@@ -126,7 +141,8 @@ export function DrawingCanvas({ onGenerate, onClear, isGenerating, autoGenerate 
   const handleManualGenerate = () => {
     const canvas = canvasRef.current;
     if (canvas && prompt.trim()) {
-      onGenerate(canvas.toDataURL("image/png"), prompt);
+      hasGeneratedRef.current = true;
+      onGenerate(canvas.toDataURL("image/png"), prompt, imagination);
     }
   };
 
@@ -226,6 +242,29 @@ export function DrawingCanvas({ onGenerate, onClear, isGenerating, autoGenerate 
               </p>
             </div>
           )}
+        </div>
+        <div>
+          <label htmlFor="imagination" className="block text-sm font-medium text-neutral-700 mb-2">
+            Imagination Level
+          </label>
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-neutral-500 font-medium">Precise</span>
+            <input
+              id="imagination"
+              type="range"
+              min="0"
+              max="100"
+              value={imagination}
+              onChange={(e) => setImagination(parseInt(e.target.value))}
+              disabled={isGenerating}
+              className="flex-1 h-2 accent-neutral-900 cursor-pointer"
+            />
+            <span className="text-xs text-neutral-500 font-medium">Creative</span>
+            <span className="text-xs text-neutral-600 font-mono w-8 text-center">{imagination}</span>
+          </div>
+          <p className="text-xs text-neutral-500 mt-1">
+            {imagination < 30 ? "Follows your sketch closely" : imagination < 70 ? "Balanced interpretation" : "More creative freedom"}
+          </p>
         </div>
         {!autoGenerate && (
           <Button

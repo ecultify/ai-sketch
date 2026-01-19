@@ -1,6 +1,7 @@
 interface FreepikGenerateParams {
   prompt: string;
   sketchImage?: string;
+  imagination?: number; // 0-100, where 0 is precise and 100 is creative
 }
 
 interface FreepikImageData {
@@ -28,6 +29,12 @@ export async function generateFreepikImage(params: FreepikGenerateParams): Promi
     throw new Error("Freepik API key not configured");
   }
 
+  // Convert imagination (0-100) to structure weight (1.0-0.3)
+  // Lower imagination = higher weight (more precise)
+  // Higher imagination = lower weight (more creative)
+  const imagination = params.imagination ?? 50;
+  const structureWeight = 1.0 - (imagination / 100) * 0.7; // Maps 0-100 to 1.0-0.3
+
   const generateBody: any = {
     prompt: params.prompt,
     num_images: 1,
@@ -36,13 +43,13 @@ export async function generateFreepikImage(params: FreepikGenerateParams): Promi
     }
   };
 
-  // If sketch image is provided, use it for sketch-to-image with high weight
+  // If sketch image is provided, use it for sketch-to-image
   if (params.sketchImage) {
     generateBody.image.structure_reference = {
       url: params.sketchImage,
-      weight: 1.0  // Maximum weight to follow the sketch structure closely
+      weight: structureWeight
     };
-    console.log("Using structure reference with weight 1.0");
+    console.log(`Using structure reference with weight ${structureWeight.toFixed(2)} (imagination: ${imagination})`);
   }
 
   console.log("Sending request to Freepik API with prompt:", generateBody.prompt.substring(0, 100));
