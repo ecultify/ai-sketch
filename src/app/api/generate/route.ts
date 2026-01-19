@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import Replicate from "replicate";
+import { generateFreepikImage } from "@/lib/freepik";
 
 export async function POST(request: Request) {
   try {
@@ -9,43 +9,28 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "No image provided" }, { status: 400 });
     }
 
-    const apiToken = process.env.REPLICATE_API_TOKEN;
-    if (!apiToken) {
-      return NextResponse.json(
-        { error: "Replicate API token not configured" },
-        { status: 500 }
-      );
+    if (!prompt?.trim()) {
+      return NextResponse.json({ error: "No prompt provided" }, { status: 400 });
     }
 
-    const replicate = new Replicate({ auth: apiToken });
+    const basePrompt = prompt.trim();
+    // Simple anime transformation - just convert the drawing to anime style
+    const animePrompt = `${basePrompt}, anime style, highly detailed anime illustration, vibrant colors, clean lines, cel shading, manga art style`;
 
-    const basePrompt = prompt?.trim() || "character";
-    const animePrompt = `masterpiece, best quality, highly detailed anime illustration, anime style, ${basePrompt}, vibrant colors, detailed anime art, manga style`;
-    const negativePrompt = "blurry, low quality, deformed, ugly, mutated, worst quality, photo, realistic, 3d render";
+    console.log("Generating with prompt:", animePrompt);
 
-    const input = {
-      image: image,
+    // Use Freepik API for sketch-to-image generation
+    const generatedImageUrl = await generateFreepikImage({
       prompt: animePrompt,
-      n_prompt: negativePrompt,
-      scale: 9,
-      ddim_steps: 30,
-      num_samples: "1",
-      image_resolution: "512",
-    };
-
-    const output = await replicate.run(
-      "jagilley/controlnet-scribble:435061a1b5a4c1e26740464bf786efdfa9cb3a3ac488595a2de23e143fdb0117",
-      { input }
-    );
-
-    const outputArray = output as string[];
-    const generatedImageUrl = outputArray[1];
+      sketchImage: image,
+    });
 
     return NextResponse.json({ image: generatedImageUrl });
   } catch (error) {
     console.error("Error processing request:", error);
+    const errorMessage = error instanceof Error ? error.message : "Internal server error";
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: errorMessage },
       { status: 500 }
     );
   }
