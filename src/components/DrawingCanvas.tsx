@@ -238,9 +238,9 @@ export function DrawingCanvas({ onGenerate, onClear, onImaginationChange, isGene
           onTouchMove={draw}
           className="absolute inset-0 w-full h-full touch-none"
         />
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <p className="text-neutral-300 text-sm font-medium">Draw your sketch here ✏️</p>
-        </div>
+        {/* <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <p className="text-neutral-300 text-sm font-medium"> </p>
+        </div> */}
       </div>
 
       <div className="mt-4 space-y-3">
@@ -290,10 +290,10 @@ export function DrawingCanvas({ onGenerate, onClear, onImaginationChange, isGene
             <span className="text-xs text-neutral-600 font-mono w-8 text-center">{imagination}</span>
           </div>
           <p className="text-xs text-neutral-500 mt-1">
-            {imagination <= 20 ? "🎯 Follows sketch exactly - only changes style to anime" : 
-             imagination <= 40 ? "📐 Follows sketch closely with small improvements" : 
-             imagination <= 60 ? "⚖️ Balanced - keeps general pose, enhances details" : 
-             imagination <= 80 ? "🎨 Creative interpretation - keeps the general idea" : 
+            {imagination <= 20 ? "Follows sketch exactly - only changes style to anime" : 
+             imagination <= 40 ? "Follows sketch closely with small improvements" : 
+             imagination <= 60 ? "Balanced - keeps general pose, enhances details" : 
+             imagination <= 80 ? "Creative interpretation - keeps the general idea" : 
              "✨ Maximum creativity - uses sketch as loose inspiration"}
           </p>
         </div>

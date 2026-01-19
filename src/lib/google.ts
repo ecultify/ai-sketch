@@ -13,7 +13,6 @@ export async function generateGoogleImage(params: GoogleGenerateParams): Promise
 
   // Use imagination level to control how closely to follow the sketch
   const imagination = params.imagination ?? 50;
-  
   let styleGuidance = "";
   if (imagination <= 20) {
     styleGuidance = "IMPORTANT: Follow the sketch EXACTLY. Keep the exact same pose, proportions, and composition. Only change the style to anime.";
@@ -27,7 +26,6 @@ export async function generateGoogleImage(params: GoogleGenerateParams): Promise
     styleGuidance = "Use the sketch as loose inspiration only. Be very creative and artistic with your interpretation.";
   }
 
-  // Enhance prompt with anime styling and background
   const animePrompt = `Transform this sketch into anime style: ${params.prompt}. 
 ${styleGuidance}
 Make it a high quality anime illustration with vibrant colors, clean lineart, cel shading, manga art style.
