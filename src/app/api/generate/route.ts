@@ -19,13 +19,18 @@ export async function POST(request: Request) {
 
     const replicate = new Replicate({ auth: apiToken });
 
-    const userPrompt = prompt?.trim() 
-      ? `a detailed, high quality ${prompt}` 
-      : "a detailed, polished, colorful digital artwork based on this sketch";
+    const basePrompt = prompt?.trim() || "character";
+    const animePrompt = `masterpiece, best quality, highly detailed anime illustration, anime style, ${basePrompt}, vibrant colors, detailed anime art, manga style`;
+    const negativePrompt = "blurry, low quality, deformed, ugly, mutated, worst quality, photo, realistic, 3d render";
 
     const input = {
       image: image,
-      prompt: userPrompt,
+      prompt: animePrompt,
+      n_prompt: negativePrompt,
+      scale: 9,
+      ddim_steps: 30,
+      num_samples: 1,
+      image_resolution: 512,
     };
 
     const output = await replicate.run(
