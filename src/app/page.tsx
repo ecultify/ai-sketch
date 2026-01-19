@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { DrawingCanvas } from "@/components/DrawingCanvas";
+import Image from "next/image";
 
 export default function Home() {
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
@@ -35,16 +36,34 @@ export default function Home() {
   };
 
   return (
-    <div className="h-screen w-screen bg-gradient-to-br from-zinc-50 to-zinc-100 grid grid-cols-1 md:grid-cols-2">
-      <div className="h-full border-r border-zinc-200 flex flex-col bg-white/50 backdrop-blur-sm">
-        <div className="p-4 border-b border-zinc-200 bg-white/80">
-          <div className="flex items-center gap-2">
-            <svg className="w-5 h-5 text-zinc-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-            </svg>
-            <span className="text-sm font-semibold text-zinc-700">Sketch Canvas</span>
-          </div>
+    <div className="h-screen w-screen bg-gradient-to-br from-zinc-50 to-zinc-100 flex flex-col">
+      {/* Header with Logo */}
+      <header className="bg-white border-b border-zinc-200 px-6 py-3 flex items-center justify-between shadow-sm">
+        <div className="flex items-center gap-3">
+          <Image 
+            src="/logo-ecultify.png.webp" 
+            alt="Ecultify" 
+            width={120} 
+            height={40}
+            className="h-10 w-auto"
+            priority
+          />
+          <div className="h-6 w-px bg-zinc-300"></div>
+          <h1 className="text-lg font-semibold text-zinc-800">AI Sketch to Anime</h1>
         </div>
+      </header>
+
+      {/* Main Content */}
+      <div className="flex-1 grid grid-cols-1 md:grid-cols-2 overflow-hidden">
+        <div className="h-full border-r border-zinc-200 flex flex-col bg-white/50 backdrop-blur-sm">
+          <div className="p-4 border-b border-zinc-200 bg-white/80">
+            <div className="flex items-center gap-2">
+              <svg className="w-5 h-5 text-zinc-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+              </svg>
+              <span className="text-sm font-semibold text-zinc-700">Sketch Canvas</span>
+            </div>
+          </div>
         <div className="flex-1">
           <DrawingCanvas 
             onGenerate={handleGenerate} 
@@ -102,6 +121,7 @@ export default function Home() {
             </div>
           )}
         </div>
+      </div>
       </div>
     </div>
   );
