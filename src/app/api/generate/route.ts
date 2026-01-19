@@ -29,8 +29,8 @@ export async function POST(request: Request) {
       n_prompt: negativePrompt,
       scale: 9,
       ddim_steps: 30,
-      num_samples: 1,
-      image_resolution: 512,
+      num_samples: "1",
+      image_resolution: "512",
     };
 
     const output = await replicate.run(
