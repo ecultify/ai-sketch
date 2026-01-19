@@ -91,7 +91,24 @@ export function DrawingCanvas({ onSend, isLoading }: DrawingCanvasProps) {
   const handleSend = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const imageData = canvas.toDataURL("image/png");
+    
+    const tempCanvas = document.createElement("canvas");
+    tempCanvas.width = canvas.width;
+    tempCanvas.height = canvas.height;
+    const tempCtx = tempCanvas.getContext("2d");
+    if (!tempCtx) return;
+    
+    tempCtx.drawImage(canvas, 0, 0);
+    const imageDataObj = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
+    const data = imageDataObj.data;
+    for (let i = 0; i < data.length; i += 4) {
+      data[i] = 255 - data[i];
+      data[i + 1] = 255 - data[i + 1];
+      data[i + 2] = 255 - data[i + 2];
+    }
+    tempCtx.putImageData(imageDataObj, 0, 0);
+    
+    const imageData = tempCanvas.toDataURL("image/png");
     onSend(imageData, prompt);
   }, [onSend, prompt]);
 
