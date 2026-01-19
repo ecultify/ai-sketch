@@ -8,13 +8,13 @@ export default function Home() {
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSend = async (imageData: string) => {
+  const handleSend = async (imageData: string, prompt: string) => {
     setIsLoading(true);
     try {
       const response = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ image: imageData }),
+        body: JSON.stringify({ image: imageData, prompt }),
       });
       const data = await response.json();
       if (data.image) {
@@ -54,6 +54,7 @@ export default function Home() {
                 src={generatedImage}
                 alt="Generated image"
                 fill
+                sizes="(max-width: 768px) 100vw, 50vw"
                 className="object-contain"
               />
             </div>

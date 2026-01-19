@@ -3,7 +3,7 @@
 import { useRef, useState, useEffect, useCallback } from "react";
 
 interface DrawingCanvasProps {
-  onSend: (imageData: string) => void;
+  onSend: (imageData: string, prompt: string) => void;
   isLoading: boolean;
 }
 
@@ -11,6 +11,7 @@ export function DrawingCanvas({ onSend, isLoading }: DrawingCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [hasDrawn, setHasDrawn] = useState(false);
+  const [prompt, setPrompt] = useState("");
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -91,8 +92,8 @@ export function DrawingCanvas({ onSend, isLoading }: DrawingCanvasProps) {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const imageData = canvas.toDataURL("image/png");
-    onSend(imageData);
-  }, [onSend]);
+    onSend(imageData, prompt);
+  }, [onSend, prompt]);
 
   return (
     <div className="flex h-full flex-col">
@@ -109,6 +110,16 @@ export function DrawingCanvas({ onSend, isLoading }: DrawingCanvasProps) {
           onTouchStart={startDrawing}
           onTouchMove={draw}
           onTouchEnd={stopDrawing}
+        />
+      </div>
+      <div className="px-6 pb-4">
+        <input
+          type="text"
+          value={prompt}
+          onChange={(e) => setPrompt(e.target.value)}
+          placeholder="What are you drawing? (e.g., a cat, a house)"
+          className="w-full px-4 py-2.5 text-sm border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent"
+          disabled={isLoading}
         />
       </div>
       <div className="flex gap-3 p-6 pt-0 justify-center">

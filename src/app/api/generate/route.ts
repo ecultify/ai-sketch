@@ -3,7 +3,7 @@ import Replicate from "replicate";
 
 export async function POST(request: Request) {
   try {
-    const { image } = await request.json();
+    const { image, prompt } = await request.json();
 
     if (!image) {
       return NextResponse.json({ error: "No image provided" }, { status: 400 });
@@ -19,9 +19,13 @@ export async function POST(request: Request) {
 
     const replicate = new Replicate({ auth: apiToken });
 
+    const userPrompt = prompt?.trim() 
+      ? `a detailed, high quality ${prompt}` 
+      : "a detailed, polished, colorful digital artwork based on this sketch";
+
     const input = {
       image: image,
-      prompt: "a detailed, polished, colorful digital artwork based on this sketch",
+      prompt: userPrompt,
     };
 
     const output = await replicate.run(
