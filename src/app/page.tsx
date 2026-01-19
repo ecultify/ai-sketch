@@ -6,15 +6,20 @@ import Image from "next/image";
 
 export default function Home() {
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
+  const [originalSketch, setOriginalSketch] = useState<string | null>(null);
+  const [imagination, setImagination] = useState<number>(50);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleGenerate = async (imageData: string, prompt: string, imagination: number) => {
+  const handleGenerate = async (imageData: string, prompt: string, imaginationLevel: number) => {
     setIsLoading(true);
+    setOriginalSketch(imageData); // Store the original sketch
+    setImagination(imaginationLevel); // Store imagination level
+    
     try {
       const response = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ image: imageData, prompt, imagination }),
+        body: JSON.stringify({ image: imageData, prompt, imagination: imaginationLevel }),
       });
       const data = await response.json();
       if (data.error) {
@@ -33,7 +38,18 @@ export default function Home() {
 
   const handleClear = () => {
     setGeneratedImage(null);
+    setOriginalSketch(null);
   };
+
+  // Calculate which image to display based on imagination level
+  const getDisplayImage = () => {
+    if (!originalSketch) return null;
+    if (imagination === 0) return originalSketch; // Show exact doodle only at 0%
+    if (!generatedImage) return originalSketch; // If AI hasn't generated yet, show doodle
+    return generatedImage; // Show AI image for any value > 0
+  };
+
+  const displayImage = getDisplayImage();
 
   return (
     <div className="h-screen w-screen bg-gradient-to-br from-zinc-50 to-zinc-100 flex flex-col">
@@ -68,8 +84,9 @@ export default function Home() {
           <DrawingCanvas 
             onGenerate={handleGenerate} 
             onClear={handleClear}
+            onImaginationChange={setImagination}
             isGenerating={isLoading} 
-            autoGenerate={true} 
+            autoGenerate={false} 
           />
         </div>
       </div>
@@ -101,11 +118,11 @@ export default function Home() {
                 <span className="text-xs text-zinc-400">This may take 5-15 seconds</span>
               </div>
             </div>
-          ) : generatedImage ? (
-            <div className="w-full max-w-md aspect-square relative rounded-lg overflow-hidden border border-zinc-200 shadow-lg transition-all duration-300 hover:shadow-xl">
+          ) : displayImage ? (
+            <div className="w-full max-w-md aspect-square relative rounded-lg overflow-hidden border border-zinc-200 shadow-lg transition-all duration-300 hover:shadow-xl bg-white">
               <img
-                src={generatedImage}
-                alt="Generated anime image"
+                src={displayImage}
+                alt={imagination === 0 ? "Your doodle" : "Generated anime image"}
                 className="w-full h-full object-contain animate-fadeIn"
               />
             </div>

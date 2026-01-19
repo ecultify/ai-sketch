@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { generateFreepikImage } from "@/lib/freepik";
+import { generateGoogleImage } from "@/lib/google";
 
 export async function POST(request: Request) {
   try {
@@ -9,21 +9,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "No image provided" }, { status: 400 });
     }
 
-    if (!prompt?.trim()) {
-      return NextResponse.json({ error: "No prompt provided" }, { status: 400 });
-    }
+    // Use prompt if provided, otherwise use a generic description
+    const basePrompt = prompt?.trim() || "anime character";
 
-    const basePrompt = prompt.trim();
-    // Simple anime transformation - just convert the drawing to anime style
-    const animePrompt = `${basePrompt}, anime style, highly detailed anime illustration, vibrant colors, clean lines, cel shading, manga art style`;
+    console.log("Generating with base prompt:", basePrompt);
+    console.log("Using Google Gemini (Nano Banana) - sketch + prompt for anime generation");
 
-    console.log("Generating with prompt:", animePrompt);
-    console.log("Imagination level:", imagination);
-
-    // Use Freepik API for sketch-to-image generation
-    const generatedImageUrl = await generateFreepikImage({
-      prompt: animePrompt,
-      sketchImage: image,
+    // Use Google Gemini for sketch-to-anime generation
+    const generatedImageUrl = await generateGoogleImage({
+      prompt: basePrompt,
+      sketchImage: image, // Google Gemini uses the sketch as reference!
       imagination,
     });
 
