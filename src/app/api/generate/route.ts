@@ -38,8 +38,8 @@ export async function POST(request: Request) {
       { input }
     );
 
-    const outputArray = output as { url: () => string }[];
-    const generatedImageUrl = outputArray[0].url();
+    const outputArray = output as string[];
+    const generatedImageUrl = outputArray[1];
 
     return NextResponse.json({ image: generatedImageUrl });
   } catch (error) {

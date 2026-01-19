@@ -1,159 +1,165 @@
 "use client";
 
-import { useRef, useState, useEffect, useCallback } from "react";
+import { useRef, useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Eraser, Pencil, Send, Trash2 } from "lucide-react";
 
 interface DrawingCanvasProps {
-  onSend: (imageData: string, prompt: string) => void;
-  isLoading: boolean;
+  onSend: (imageData: string) => void;
+  isGenerating: boolean;
 }
 
-export function DrawingCanvas({ onSend, isLoading }: DrawingCanvasProps) {
+export function DrawingCanvas({ onSend, isGenerating }: DrawingCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
-  const [hasDrawn, setHasDrawn] = useState(false);
-  const [prompt, setPrompt] = useState("");
+  const [color, setColor] = useState("#000000");
+  const [lineWidth, setLineWidth] = useState(3);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
-    ctx.lineWidth = 3;
-    ctx.strokeStyle = "#1a1a1a";
-  }, []);
 
-  const getCoordinates = useCallback(
-    (e: React.MouseEvent | React.TouchEvent) => {
-      const canvas = canvasRef.current;
-      if (!canvas) return { x: 0, y: 0 };
-      const rect = canvas.getBoundingClientRect();
-      const scaleX = canvas.width / rect.width;
-      const scaleY = canvas.height / rect.height;
-
-      if ("touches" in e) {
-        return {
-          x: (e.touches[0].clientX - rect.left) * scaleX,
-          y: (e.touches[0].clientY - rect.top) * scaleY,
-        };
+    // Set canvas size to match container
+    const resizeCanvas = () => {
+      const rect = canvas.parentElement?.getBoundingClientRect();
+      if (rect) {
+        const tempImage = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        canvas.width = rect.width;
+        canvas.height = rect.height;
+        ctx.fillStyle = "white";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.putImageData(tempImage, 0, 0);
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
       }
-      return {
-        x: (e.clientX - rect.left) * scaleX,
-        y: (e.clientY - rect.top) * scaleY,
-      };
-    },
-    []
-  );
+    };
 
-  const startDrawing = useCallback(
-    (e: React.MouseEvent | React.TouchEvent) => {
-      const canvas = canvasRef.current;
-      const ctx = canvas?.getContext("2d");
-      if (!ctx) return;
-      const { x, y } = getCoordinates(e);
-      ctx.beginPath();
-      ctx.moveTo(x, y);
-      setIsDrawing(true);
-      setHasDrawn(true);
-    },
-    [getCoordinates]
-  );
+    resizeCanvas();
+    window.addEventListener("resize", resizeCanvas);
+    return () => window.removeEventListener("resize", resizeCanvas);
+  }, []);
 
-  const draw = useCallback(
-    (e: React.MouseEvent | React.TouchEvent) => {
-      if (!isDrawing) return;
-      const canvas = canvasRef.current;
-      const ctx = canvas?.getContext("2d");
-      if (!ctx) return;
-      const { x, y } = getCoordinates(e);
-      ctx.lineTo(x, y);
-      ctx.stroke();
-    },
-    [isDrawing, getCoordinates]
-  );
+  const startDrawing = (e: React.MouseEvent | React.TouchEvent) => {
+    setIsDrawing(true);
+    draw(e);
+  };
 
-  const stopDrawing = useCallback(() => {
+  const stopDrawing = () => {
     setIsDrawing(false);
-  }, []);
-
-  const clearCanvas = useCallback(() => {
     const canvas = canvasRef.current;
-    const ctx = canvas?.getContext("2d");
-    if (!ctx || !canvas) return;
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    setHasDrawn(false);
-  }, []);
+    if (canvas) {
+      const ctx = canvas.getContext("2d");
+      ctx?.beginPath();
+    }
+  };
 
-  const handleSend = useCallback(() => {
+  const draw = (e: React.MouseEvent | React.TouchEvent) => {
+    if (!isDrawing) return;
+
     const canvas = canvasRef.current;
     if (!canvas) return;
-    
-    const tempCanvas = document.createElement("canvas");
-    tempCanvas.width = canvas.width;
-    tempCanvas.height = canvas.height;
-    const tempCtx = tempCanvas.getContext("2d");
-    if (!tempCtx) return;
-    
-    tempCtx.drawImage(canvas, 0, 0);
-    const imageDataObj = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
-    const data = imageDataObj.data;
-    for (let i = 0; i < data.length; i += 4) {
-      data[i] = 255 - data[i];
-      data[i + 1] = 255 - data[i + 1];
-      data[i + 2] = 255 - data[i + 2];
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const x = ("touches" in e) ? e.touches[0].clientX - rect.left : e.clientX - rect.left;
+    const y = ("touches" in e) ? e.touches[0].clientY - rect.top : e.clientY - rect.top;
+
+    ctx.lineWidth = lineWidth;
+    ctx.strokeStyle = color;
+
+    ctx.lineTo(x, y);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+  };
+
+  const clearCanvas = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctx.fillStyle = "white";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  };
+
+  const handleSend = () => {
+    const canvas = canvasRef.current;
+    if (canvas) {
+      onSend(canvas.toDataURL("image/png"));
     }
-    tempCtx.putImageData(imageDataObj, 0, 0);
-    
-    const imageData = tempCanvas.toDataURL("image/png");
-    onSend(imageData, prompt);
-  }, [onSend, prompt]);
+  };
 
   return (
-    <div className="flex h-full flex-col">
-      <div className="flex-1 flex items-center justify-center p-6">
+    <div className="flex flex-col h-full w-full bg-neutral-50 p-4 border-r border-neutral-200">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex gap-2">
+          <Button
+            variant={color === "#000000" ? "default" : "outline"}
+            size="icon"
+            onClick={() => setColor("#000000")}
+            className="w-8 h-8"
+          >
+            <Pencil className="w-4 h-4" />
+          </Button>
+          <Button
+            variant={color === "#FFFFFF" ? "default" : "outline"}
+            size="icon"
+            onClick={() => setColor("#FFFFFF")}
+            className="w-8 h-8"
+          >
+            <Eraser className="w-4 h-4" />
+          </Button>
+          <input
+            type="range"
+            min="1"
+            max="20"
+            value={lineWidth}
+            onChange={(e) => setLineWidth(parseInt(e.target.value))}
+            className="w-24 accent-neutral-900"
+          />
+        </div>
+        <div className="flex gap-2">
+          <Button variant="ghost" size="icon" onClick={clearCanvas}>
+            <Trash2 className="w-4 h-4" />
+          </Button>
+        </div>
+      </div>
+
+      <div className="flex-1 relative bg-white rounded-lg shadow-inner overflow-hidden cursor-crosshair">
         <canvas
           ref={canvasRef}
-          width={512}
-          height={512}
-          className="w-full max-w-md aspect-square border border-zinc-200 rounded-lg cursor-crosshair touch-none bg-white"
           onMouseDown={startDrawing}
-          onMouseMove={draw}
           onMouseUp={stopDrawing}
-          onMouseLeave={stopDrawing}
+          onMouseOut={stopDrawing}
+          onMouseMove={draw}
           onTouchStart={startDrawing}
-          onTouchMove={draw}
           onTouchEnd={stopDrawing}
+          onTouchMove={draw}
+          className="absolute inset-0 w-full h-full touch-none"
         />
       </div>
-      <div className="px-6 pb-4">
-        <input
-          type="text"
-          value={prompt}
-          onChange={(e) => setPrompt(e.target.value)}
-          placeholder="What are you drawing? (e.g., a cat, a house)"
-          className="w-full px-4 py-2.5 text-sm border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent"
-          disabled={isLoading}
-        />
-      </div>
-      <div className="flex gap-3 p-6 pt-0 justify-center">
-        <button
-          onClick={clearCanvas}
-          disabled={isLoading}
-          className="px-6 py-2.5 text-sm font-medium text-zinc-600 bg-zinc-100 rounded-lg hover:bg-zinc-200 transition-colors disabled:opacity-50"
-        >
-          Clear
-        </button>
-        <button
+
+      <div className="mt-4">
+        <Button
           onClick={handleSend}
-          disabled={!hasDrawn || isLoading}
-          className="px-8 py-2.5 text-sm font-medium text-white bg-zinc-900 rounded-lg hover:bg-zinc-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={isGenerating}
+          className="w-full h-12 text-lg font-medium tracking-tight"
         >
-          {isLoading ? "Generating..." : "Send"}
-        </button>
+          {isGenerating ? (
+            <span className="flex items-center gap-2">
+              <span className="animate-pulse">Generating...</span>
+            </span>
+          ) : (
+            <span className="flex items-center gap-2">
+              Send Doodle <Send className="w-4 h-4" />
+            </span>
+          )}
+        </Button>
       </div>
     </div>
   );
